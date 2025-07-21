@@ -139,10 +139,10 @@ void PCBCUPID_DCMotor::run(uint8_t cmd) {
         case BACKWARD:
             latch_state = 216;
             break;
-        case BRAKE:
+        case LEFT:
             latch_state = 149;
             break;
-        case RELEASE:
+        case RIGHT:
             latch_state = 106;
             break;
     }
