@@ -1,46 +1,91 @@
-#ifndef PCBCUPID_L293D_H
-#define PCBCUPID_L293D_H
+  // PCBCUPID L293D Motor Shield Library
+// Similar interface to AFMotor.h but for ESP32 with shift register control
 
+#ifndef _PCBCUPID_L293D_h_
+#define _PCBCUPID_L293D_h_
+
+#include <inttypes.h>
 #include <Arduino.h>
-#ifdef ESP32
-  #include <driver/ledc.h>
+
+#if defined(ESP32)
+    #include "driver/ledc.h"
+    
+    //#define MOTORDEBUG 1
+    
+    // PWM frequency definitions for ESP32
+    #define MOTOR_64KHZ   64000
+    #define MOTOR_32KHZ   32000
+    #define MOTOR_16KHZ   16000
+    #define MOTOR_8KHZ    8000
+    #define MOTOR_4KHZ    4000
+    #define MOTOR_2KHZ    2000
+    #define MOTOR_1KHZ    1000
+    
+    #define DC_MOTOR_PWM_RATE   MOTOR_8KHZ    // Default PWM rate for DC motors
+    
+#else
+    #define DC_MOTOR_PWM_RATE   1000          // Default for other platforms
 #endif
 
-// Motor pin definitions
-#define MOTOR1_A 2
-#define MOTOR1_B 3
-#define MOTOR2_A 1
-#define MOTOR2_B 4
-#define MOTOR3_A 5
-#define MOTOR3_B 7
-#define MOTOR4_A 0
-#define MOTOR4_B 6
+// Bit positions for motor control in shift register
+// Based on your working patterns: MotorLeft = 0b01010100, MotorRight = 0b00001000
+#define MOTOR1_A 7
+#define MOTOR1_B 6
+#define MOTOR2_A 4
+#define MOTOR2_B 2
+#define MOTOR3_A 3
+#define MOTOR3_B 1
+#define MOTOR4_A 5
+#define MOTOR4_B 0
 
-#define MOTORLATCH 15
-#define MOTORENABLE 0
-#define MOTORDATA 46
-#define MOTORCLK 3
-
+// Constants that the user passes in to the motor calls
 #define FORWARD 1
 #define BACKWARD 2
-#define RELEASE 3
+#define LEFT 3
+#define RIGHT 4
 
-class MotorController {
-  public:
-    MotorController();
-    void enable();
-    void latch_tx();
-    boolean TimerInitalized;
-};
+// ESP32 pin names for interface to 74HCT595 shift register
+// Default pins from your working code
+#define MOTORLATCH 15
+#define MOTORCLK 3
+#define MOTORENABLE 0
+#define MOTORDATA 6
 
-class DCMotor {
+// PWM enable pins (from your working code)
+#define MOTOR1_PWM 4
+#define MOTOR2_PWM 2
+#define MOTOR3_PWM 1
+#define MOTOR4_PWM 14
+
+class PCBCUPID_MotorController
+{
   public:
-    DCMotor(uint8_t num, uint8_t freq = 5000);
-    void run(uint8_t cmd);
-    void setSpeed(uint8_t speed);
-  
+    PCBCUPID_MotorController(void);
+    PCBCUPID_MotorController(uint8_t latch, uint8_t clk, uint8_t enable, uint8_t data);
+    void enable(void);
+    friend class PCBCUPID_DCMotor;
+    void latch_tx(void);
+    uint8_t TimerInitalized;
+    
   private:
-    uint8_t motornum, pwmfreq;
+    uint8_t latch_pin, clk_pin, enable_pin, data_pin;
 };
+
+class PCBCUPID_DCMotor
+{
+ public:
+  PCBCUPID_DCMotor(uint8_t motornum, uint16_t freq = DC_MOTOR_PWM_RATE);
+  void run(uint8_t cmd);
+  void setSpeed(uint8_t speed);
+
+ private:
+  uint8_t motornum;
+  uint16_t pwmfreq;
+  uint8_t pwm_pin;
+  void initPWM(void);
+};
+
+// Utility functions
+uint8_t getlatchstate(void);
 
 #endif
