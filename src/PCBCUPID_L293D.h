@@ -100,11 +100,4 @@ class PCBCUPID_DCMotor
   uint16_t pwmfreq;
   void initPWM(int pwm_pin);
 };
-<<<<<<< HEAD
 #endif
-=======
-
-uint8_t getlatchstate(void);
-
-#endif
->>>>>>> e047b30828cbf763362f631ea5e8c78f4f7835e3
