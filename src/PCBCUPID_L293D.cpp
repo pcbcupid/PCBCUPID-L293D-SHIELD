@@ -41,7 +41,7 @@ void PCBCUPID_MotorController::enable(void) {
     digitalWrite(MOTOR4_PWM, HIGH);
     
     latch_state = 0;
-    latch_tx();
+    MC.latch_tx();
     digitalWrite(enable_pin, LOW);  // Enable the motor driver
 }
 
@@ -132,18 +132,25 @@ void PCBCUPID_DCMotor::run(uint8_t cmd) {
         default: return;
     }
     
+    latch_state &= ~((1 << a) | (1 << b));
+
     switch (cmd) {
         case FORWARD:
-            latch_state = 39;
+            latch_state |= (1 << a);
             break;
         case BACKWARD:
-            latch_state = 216;
+            latch_state |= (1 << b);
             break;
         case LEFT:
-            latch_state = 149;
+            latch_state |= (1 << a);
             break;
         case RIGHT:
-            latch_state = 106;
+            latch_state |= (1 << b);
+            break;
+        case RELEASE:  // Add this case for stopping
+            // Clear both control bits for this motor
+            latch_state &= ~(1 << a);
+            latch_state &= ~(1 << b);
             break;
     }
     MC.latch_tx();

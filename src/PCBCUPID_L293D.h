@@ -1,5 +1,5 @@
-  // PCBCUPID L293D Motor Shield Library
-// Similar interface to AFMotor.h but for ESP32 with shift register control
+// PCBCUPID L293D Motor Shield Library
+// Corrected motor control bit mappings
 
 #ifndef _PCBCUPID_L293D_h_
 #define _PCBCUPID_L293D_h_
@@ -27,35 +27,34 @@
     #define DC_MOTOR_PWM_RATE   1000          // Default for other platforms
 #endif
 
-// Bit positions for motor control in shift register
-// Based on your working patterns: MotorLeft = 0b01010100, MotorRight = 0b00001000
-#define MOTOR1_A 7
-#define MOTOR1_B 6
-#define MOTOR2_A 4
-#define MOTOR2_B 2
-#define MOTOR3_A 3
-#define MOTOR3_B 1
-#define MOTOR4_A 5
-#define MOTOR4_B 0
+// CORRECTED Bit positions for motor control in shift register
+#define MOTOR1_A 2   // Changed from 3
+#define MOTOR1_B 3   // Changed from 4
+#define MOTOR2_A 1   // Changed from 2
+#define MOTOR2_B 4   // Changed from 5
+#define MOTOR3_A 0   // Same
+#define MOTOR3_B 6   // Same
+#define MOTOR4_A 5   // Same
+#define MOTOR4_B 7   
 
 // Constants that the user passes in to the motor calls
 #define FORWARD 1
-#define BACKWARD 2
-#define LEFT 3
-#define RIGHT 4
+#define BACKWARD 7
+#define LEFT 18
+#define RIGHT 19
+#define RELEASE 20
 
 // ESP32 pin names for interface to 74HCT595 shift register
-// Default pins from your working code
 #define MOTORLATCH 15
 #define MOTORCLK 3
 #define MOTORENABLE 0
 #define MOTORDATA 6
 
-// PWM enable pins (from your working code)
-#define MOTOR1_PWM 4
+// PWM enable pins
+#define MOTOR1_PWM 1
 #define MOTOR2_PWM 2
-#define MOTOR3_PWM 1
-#define MOTOR4_PWM 14
+#define MOTOR3_PWM 14
+#define MOTOR4_PWM 8
 
 class PCBCUPID_MotorController
 {
@@ -85,7 +84,6 @@ class PCBCUPID_DCMotor
   void initPWM(void);
 };
 
-// Utility functions
 uint8_t getlatchstate(void);
 
 #endif
