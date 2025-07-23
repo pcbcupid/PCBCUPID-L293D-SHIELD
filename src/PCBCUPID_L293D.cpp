@@ -31,7 +31,6 @@ void PCBCUPID_MotorController::enable(void) {
     latch_state = 0;
 
     latch_tx(); //reset latch
-    
     digitalWrite(enable_pin, LOW);  // Enable the Shift Register
 }
 
