@@ -19,7 +19,6 @@
 
 #define DC_MOTOR_PWM_RATE   MOTOR_16KHZ    // Default PWM rate for DC motors
 
-<<<<<<< HEAD
 // Bit positions for motor control in shift register
 #define MOTOR1_A 2
 #define MOTOR1_B 3
@@ -35,24 +34,6 @@
 #define BACKWARD 2
 #define BRAKE 3
 #define RELEASE 4
-=======
-// CORRECTED Bit positions for motor control in shift register
-#define MOTOR1_A 2   // Changed from 3
-#define MOTOR1_B 3   // Changed from 4
-#define MOTOR2_A 1   // Changed from 2
-#define MOTOR2_B 4   // Changed from 5
-#define MOTOR3_A 0   // Same
-#define MOTOR3_B 6   // Same
-#define MOTOR4_A 5   // Same
-#define MOTOR4_B 7   
-
-// Constants that the user passes in to the motor calls
-#define FORWARD 1
-#define BACKWARD 7
-#define LEFT 18
-#define RIGHT 19
-#define RELEASE 20
->>>>>>> e047b30828cbf763362f631ea5e8c78f4f7835e3
 
 // ESP32 pin names for interface to 74HCT595 shift register
 #define MOTORLATCH 15
@@ -60,19 +41,11 @@
 #define MOTORENABLE 0
 #define MOTORDATA 6
 
-<<<<<<< HEAD
 // PWM enable pins (from your working code)
 #define MOTOR1_PWM 14
 #define MOTOR2_PWM 4
 #define MOTOR3_PWM 2
 #define MOTOR4_PWM 1
-=======
-// PWM enable pins
-#define MOTOR1_PWM 1
-#define MOTOR2_PWM 2
-#define MOTOR3_PWM 14
-#define MOTOR4_PWM 8
->>>>>>> e047b30828cbf763362f631ea5e8c78f4f7835e3
 
 class PCBCUPID_MotorController
 {
