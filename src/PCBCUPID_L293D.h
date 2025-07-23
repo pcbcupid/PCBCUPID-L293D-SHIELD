@@ -7,42 +7,33 @@
 #include <inttypes.h>
 #include <Arduino.h>
 
-#if defined(ESP32)
-    #include "driver/ledc.h"
-    
-    //#define MOTORDEBUG 1
-    
-    // PWM frequency definitions for ESP32
-    #define MOTOR_64KHZ   64000
-    #define MOTOR_32KHZ   32000
-    #define MOTOR_16KHZ   16000
-    #define MOTOR_8KHZ    8000
-    #define MOTOR_4KHZ    4000
-    #define MOTOR_2KHZ    2000
-    #define MOTOR_1KHZ    1000
-    
-    #define DC_MOTOR_PWM_RATE   MOTOR_8KHZ    // Default PWM rate for DC motors
-    
-#else
-    #define DC_MOTOR_PWM_RATE   1000          // Default for other platforms
-#endif
+#include "driver/ledc.h"
+// PWM frequency definitions for ESP32
+#define MOTOR_64KHZ   64000
+#define MOTOR_32KHZ   32000
+#define MOTOR_16KHZ   16000
+#define MOTOR_8KHZ    8000
+#define MOTOR_4KHZ    4000
+#define MOTOR_2KHZ    2000
+#define MOTOR_1KHZ    1000
+
+#define DC_MOTOR_PWM_RATE   MOTOR_16KHZ    // Default PWM rate for DC motors
 
 // Bit positions for motor control in shift register
-// Based on your working patterns: MotorLeft = 0b01010100, MotorRight = 0b00001000
-#define MOTOR1_A 7
-#define MOTOR1_B 6
-#define MOTOR2_A 4
-#define MOTOR2_B 2
-#define MOTOR3_A 3
-#define MOTOR3_B 1
+#define MOTOR1_A 2
+#define MOTOR1_B 3
+#define MOTOR2_A 1
+#define MOTOR2_B 4
+#define MOTOR3_A 0
+#define MOTOR3_B 6
 #define MOTOR4_A 5
-#define MOTOR4_B 0
+#define MOTOR4_B 7
 
 // Constants that the user passes in to the motor calls
 #define FORWARD 1
 #define BACKWARD 2
-#define LEFT 3
-#define RIGHT 4
+#define BRAKE 3
+#define RELEASE 4
 
 // ESP32 pin names for interface to 74HCT595 shift register
 // Default pins from your working code
@@ -52,10 +43,10 @@
 #define MOTORDATA 6
 
 // PWM enable pins (from your working code)
-#define MOTOR1_PWM 4
-#define MOTOR2_PWM 2
-#define MOTOR3_PWM 1
-#define MOTOR4_PWM 14
+#define MOTOR1_PWM 14
+#define MOTOR2_PWM 4
+#define MOTOR3_PWM 2
+#define MOTOR4_PWM 1
 
 class PCBCUPID_MotorController
 {
@@ -81,11 +72,6 @@ class PCBCUPID_DCMotor
  private:
   uint8_t motornum;
   uint16_t pwmfreq;
-  uint8_t pwm_pin;
-  void initPWM(void);
+  void initPWM(int pwm_pin);
 };
-
-// Utility functions
-uint8_t getlatchstate(void);
-
 #endif

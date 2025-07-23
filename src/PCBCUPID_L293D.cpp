@@ -28,30 +28,30 @@ void PCBCUPID_MotorController::enable(void) {
     pinMode(enable_pin, OUTPUT);
     pinMode(data_pin, OUTPUT);
     
-    // Initialize PWM enable pins
-    pinMode(MOTOR1_PWM, OUTPUT);
-    pinMode(MOTOR2_PWM, OUTPUT);
-    pinMode(MOTOR3_PWM, OUTPUT);
-    pinMode(MOTOR4_PWM, OUTPUT);
-    
-    // Enable all motor PWM pins
-    digitalWrite(MOTOR1_PWM, HIGH);
-    digitalWrite(MOTOR2_PWM, HIGH);
-    digitalWrite(MOTOR3_PWM, HIGH);
-    digitalWrite(MOTOR4_PWM, HIGH);
-    
     latch_state = 0;
-    latch_tx();
-    digitalWrite(enable_pin, LOW);  // Enable the motor driver
+
+    latch_tx(); //reset latch
+    
+    digitalWrite(enable_pin, LOW);  // Enable the Shift Register
 }
 
 void PCBCUPID_MotorController::latch_tx(void) {
     digitalWrite(latch_pin, LOW);
     digitalWrite(data_pin, LOW);
 
-    for (int8_t i = 7; i >= 0; i--) {
+    for (int i = 0; i < 8; i++) {
         digitalWrite(clk_pin, LOW);
-        digitalWrite(data_pin, (latch_state & (1 << i)) ? HIGH : LOW);
+
+        int b_data = latch_state & _BV(7-i);
+        
+        if (b_data) {
+            Serial.print("1");
+            digitalWrite(data_pin, HIGH);
+        } else {
+            Serial.print("0");
+            digitalWrite(data_pin, LOW);
+        }
+        
         digitalWrite(clk_pin, HIGH);
     }
     digitalWrite(latch_pin, HIGH);
@@ -60,108 +60,86 @@ void PCBCUPID_MotorController::latch_tx(void) {
 PCBCUPID_DCMotor::PCBCUPID_DCMotor(uint8_t num, uint16_t freq) {
     motornum = num;
     pwmfreq = freq;
-    
-    // Set PWM pin based on motor number
-    switch (num) {
-        case 1: pwm_pin = MOTOR1_PWM; break;
-        case 2: pwm_pin = MOTOR2_PWM; break;
-        case 3: pwm_pin = MOTOR3_PWM; break;
-        case 4: pwm_pin = MOTOR4_PWM; break;
-        default: pwm_pin = 0; break;
-    }
-    
+
     MC.enable();
-    
-    // Clear motor bits
-    switch (num) {
-        case 1:
-            latch_state &= ~(1 << MOTOR1_A) & ~(1 << MOTOR1_B);
-            break;
-        case 2:
-            latch_state &= ~(1 << MOTOR2_A) & ~(1 << MOTOR2_B);
-            break;
-        case 3:
-            latch_state &= ~(1 << MOTOR3_A) & ~(1 << MOTOR3_B);
-            break;
-        case 4:
-            latch_state &= ~(1 << MOTOR4_A) & ~(1 << MOTOR4_B);
-            break;
-    }
-    MC.latch_tx();
-    initPWM();
-}
 
-void PCBCUPID_DCMotor::initPWM(void) {
-#ifdef ESP32
-    if (!MC.TimerInitalized) {
-        // Configure LEDC timer
-        ledc_timer_config_t ledc_timer = {
-            .speed_mode = LEDC_LOW_SPEED_MODE,
-            .duty_resolution = LEDC_TIMER_8_BIT,
-            .timer_num = LEDC_TIMER_0,
-            .freq_hz = (uint32_t)pwmfreq,
-            .clk_cfg = LEDC_AUTO_CLK
-        };
-        ledc_timer_config(&ledc_timer);
-        MC.TimerInitalized = true;
-    }
-    
-    // Configure LEDC channel for this motor
-    ledc_channel_config_t ledc_channel = {
-        .gpio_num = pwm_pin,
-        .speed_mode = LEDC_LOW_SPEED_MODE,
-        .channel = (ledc_channel_t)(motornum - 1),
-        .intr_type = LEDC_INTR_DISABLE,
-        .timer_sel = LEDC_TIMER_0,
-        .duty = 255,  // Full speed initially
-        .hpoint = 0
-    };
-    ledc_channel_config(&ledc_channel);
-#endif
-}
-
-void PCBCUPID_DCMotor::run(uint8_t cmd) {
-    uint8_t a, b;
-    
-    // Get bit positions for this motor
-    switch (motornum) {
-        case 1: a = MOTOR1_A; b = MOTOR1_B; break;
-        case 2: a = MOTOR2_A; b = MOTOR2_B; break;
-        case 3: a = MOTOR3_A; b = MOTOR3_B; break;
-        case 4: a = MOTOR4_A; b = MOTOR4_B; break;
-        default: return;
-    }
-    
-    switch (cmd) {
-        case FORWARD:
-            latch_state = 39;
-            break;
-        case BACKWARD:
-            latch_state = 216;
-            break;
-        case LEFT:
-            latch_state = 149;
-            break;
-        case RIGHT:
-            latch_state = 106;
-            break;
-    }
+  switch (num) {
+  case 1:
+    latch_state &= ~_BV(MOTOR1_A) & ~_BV(MOTOR1_B); // set both motor pins to 0
     MC.latch_tx();
+    break;
+  case 2:
+    latch_state &= ~_BV(MOTOR2_A) & ~_BV(MOTOR2_B); // set both motor pins to 0
+    MC.latch_tx();
+    break;
+  case 3:
+    latch_state &= ~_BV(MOTOR3_A) & ~_BV(MOTOR3_B); // set both motor pins to 0
+    MC.latch_tx();
+    break;
+  case 4:
+    latch_state &= ~_BV(MOTOR4_A) & ~_BV(MOTOR4_B); // set both motor pins to 0
+    MC.latch_tx();
+    break;
+  }
+    Serial.printf("motor number set to %d",motornum);
 }
 
 void PCBCUPID_DCMotor::setSpeed(uint8_t speed) {
-#ifdef ESP32
-    ledc_set_duty(LEDC_LOW_SPEED_MODE, (ledc_channel_t)(motornum - 1), speed);
-    ledc_update_duty(LEDC_LOW_SPEED_MODE, (ledc_channel_t)(motornum - 1));
-#else
-    analogWrite(pwm_pin, speed);
-#endif
+    switch(motornum)
+    {
+        case 1:
+            analogWrite(MOTOR1_PWM, speed);
+        break;
+        case 2:
+            analogWrite(MOTOR2_PWM, speed);
+        break;
+        case 3:
+            analogWrite(MOTOR3_PWM, speed);
+        break;
+        case 4:
+            analogWrite(MOTOR4_PWM, speed);
+        break;
+    }
 }
 
-uint8_t getlatchstate(void) {
-    return latch_state;
+void PCBCUPID_DCMotor::initPWM(int pwm_pin) {
+
+    MC.TimerInitalized = true;
+    Serial.printf("PWM init for %d motor",motornum);
+
 }
 
+void PCBCUPID_DCMotor::run(uint8_t cmd) {
+  uint8_t a, b;
 
-
-//{39, 216, 149, 106};
+  switch (motornum) {
+  case 1:
+    a = MOTOR1_A; b = MOTOR1_B; break;
+  case 2:
+    a = MOTOR2_A; b = MOTOR2_B; break;
+  case 3:
+    a = MOTOR3_A; b = MOTOR3_B; break;
+  case 4:
+    a = MOTOR4_A; b = MOTOR4_B; break;
+  default:
+    return;
+  }
+  
+ switch (cmd) {
+  case FORWARD:
+    latch_state |= _BV(a);
+    latch_state &= ~_BV(b); 
+    MC.latch_tx();
+    break;
+  case BACKWARD:
+    latch_state &= ~_BV(a);
+    latch_state |= _BV(b); 
+    MC.latch_tx();
+    break;
+  case RELEASE:
+    latch_state &= ~_BV(a);     // A and B both low
+    latch_state &= ~_BV(b); 
+    MC.latch_tx();
+    break;
+  }
+}
